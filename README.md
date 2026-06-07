@@ -1,70 +1,326 @@
-# Getting Started with Create React App
+# Sportomic Arena Booking Availability Engine
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based implementation of the Sportomic Technical Assignment that models court availability using a **Conflict Graph** data structure.
+
+## Problem Statement
+
+A single physical turf can be configured as:
+
+### 7v7 Configuration
+
+* 7v7-A
+* 7v7-B
+
+### 5v5 Configuration
+
+* 5v5-1
+* 5v5-2
+* 5v5-3
+
+These courts share the same physical space. Therefore, booking one court may make other courts unavailable.
+
+The goal is to build an availability engine that determines:
+
+* Booked Courts
+* Blocked Courts
+* Available Courts
+
+for any booking combination.
+
+---
+
+## Solution Approach
+
+### Conflict Graph
+
+Each court is represented as a node.
+
+Physical overlaps are represented as graph edges.
+
+```text
+5v5-1 ─────── 7v7-A
+                │
+5v5-2 ──────────┤
+                │
+            7v7-B ─────── 5v5-3
+```
+
+### Overlap Mapping
+
+| Court | Overlaps With |
+| ----- | ------------- |
+| 5v5-1 | 7v7-A         |
+| 5v5-2 | 7v7-A, 7v7-B  |
+| 5v5-3 | 7v7-B         |
+| 7v7-A | 5v5-1, 5v5-2  |
+| 7v7-B | 5v5-2, 5v5-3  |
+
+---
+
+## Algorithm
+
+1. Accept selected courts as booked courts.
+2. Traverse graph relationships.
+3. Mark connected courts as blocked.
+4. Calculate available courts.
+
+```text
+Available Courts =
+All Courts
+- Booked Courts
+- Blocked Courts
+```
+
+5. Return:
+
+   * Booked Courts
+   * Blocked Courts
+   * Available Courts
+
+---
+
+## Example
+
+### Input
+
+```javascript
+["5v5-1"]
+```
+
+### Output
+
+```javascript
+{
+  booked: ["5v5-1"],
+  blocked: ["7v7-A"],
+  available: [
+    "5v5-2",
+    "5v5-3",
+    "7v7-B"
+  ]
+}
+```
+
+---
+
+## Assignment Rule Verification
+
+### Rule 1
+
+Input:
+
+```javascript
+["5v5-1"]
+```
+
+Output:
+
+```text
+Blocked: 7v7-A
+Available: 5v5-2, 5v5-3, 7v7-B
+```
+
+---
+
+### Rule 2
+
+Input:
+
+```javascript
+["7v7-A"]
+```
+
+Output:
+
+```text
+Blocked: 5v5-1, 5v5-2
+Available: 5v5-3, 7v7-B
+```
+
+---
+
+### Rule 3
+
+Input:
+
+```javascript
+["5v5-1", "5v5-2"]
+```
+
+Output:
+
+```text
+Blocked: 7v7-A, 7v7-B
+Available: 5v5-3
+```
+
+---
+
+### Rule 4
+
+Input:
+
+```javascript
+["7v7-A", "7v7-B"]
+```
+
+Output:
+
+```text
+Blocked: 5v5-1, 5v5-2, 5v5-3
+Available: None
+```
+
+---
+
+## Edge Case
+
+### Middle Court Cascade
+
+The middle court (5v5-2) overlaps both 7v7 courts.
+
+Input:
+
+```javascript
+["5v5-2"]
+```
+
+Output:
+
+```text
+Blocked:
+7v7-A
+7v7-B
+
+Available:
+5v5-1
+5v5-3
+```
+
+This behavior is automatically handled by the graph structure without requiring special business rules.
+
+---
+
+## Project Structure
+
+```text
+src/
+│
+├── components/
+│   └── CourtCard.jsx
+│
+├── data/
+│   └── data.js
+│
+├── AvailabilityEngine.js
+│
+├── App.jsx
+│
+├── App.css
+│
+└── index.js
+```
+
+---
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone <repository-url>
+```
+
+Move to project directory:
+
+```bash
+cd sportomic-booking-engine
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the application:
+
+```bash
+npm start
+```
+
+The application will run on:
+
+```text
+http://localhost:3000
+```
+
+---
 
 ## Available Scripts
 
-In the project directory, you can run:
-
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the application in development mode.
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Creates a production build in the `build` folder.
 
 ### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Removes Create React App abstraction and exposes configuration files.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Complexity Analysis
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Let:
 
-## Learn More
+* N = Number of Courts
+* E = Number of Overlap Relationships
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Time Complexity
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```text
+O(E)
+```
 
-### Code Splitting
+### Space Complexity
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```text
+O(N + E)
+```
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Future Improvements
 
-### Making a Progressive Web App
+* Time-slot based bookings
+* Multi-venue support
+* Database persistence
+* Admin dashboard
+* Booking history
+* Interval-based physical space modeling
+* Dynamic venue configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## Tech Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* React
+* JavaScript (ES6+)
+* Conflict Graph Data Structure
+* CSS
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Author
 
-### `npm run build` fails to minify
+**Subhash Kumar**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Software Developer Technical Assignment Submission for Sportomic.
